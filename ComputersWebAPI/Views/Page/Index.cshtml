@@ -1,0 +1,221 @@
+﻿<html>
+<head>
+    <title>Computers Store</title>
+    <link rel="stylesheet" href="~/bootstrap.css" >
+    
+</head>
+<body>
+    <div class="container">
+
+        <h3>Computers Prices</h3>
+        <div class="col-md">
+        <div class="card" style="width: 18rem;">
+
+                <form>
+                    <label>Company</label>
+                    <input class="form-control" id="company" type="text" /> <br />
+                    <label>Description</label>
+                    <input class="form-control" id="desc" type="text" /><br />
+                    <label>Price</label>
+                    <input class="form-control" id="price" type="number" />
+                    <input class="btn btn-secondary" type="button" id="insert" value="Insert" onclick='AddComputer(this)' />
+                </form>
+        </div>
+           </div>
+            <div class="col-md">
+                <table class="table table-bordered table-striped" id="ComTable" style="border: 3px solid #999" cellpadding="1">
+                    <thead>
+                        <tr>
+                            <td>ID </td>
+                            <td> Company </td>
+                            <td> Description </td>
+                            <td> Price </td>
+                            <td> </td>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <br />
+        <div id="msg"></div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script>
+
+        $(document).ready(function () {
+            ComputerList();
+        });
+
+        // Computer structure to store and save data
+        var Computer = {
+            id: 0,
+            company: "",
+            description: "",
+            price: 0
+        }
+
+
+        // show all the computers data
+        function ComputerListSuccess(Comps) {
+            // Iterate over the collection of data
+            $("#ComTable tbody").remove();
+
+            $.each(Comps, function (index, comp) {
+
+                // Add new row to the ComTable
+                AddRow(comp);
+            });
+        }
+
+        // Add a row to the ComTable
+        function AddRow(comp) {
+
+            // check if a <tbody> tag exists
+
+            if ($("#ComTable tbody").length == 0) {
+
+                // add one if not
+                $("#ComTable").append("<tbody></tbody>");
+            }
+
+            // Append row
+            $("#ComTable tbody").append(
+                ConstructTableBody(comp));
+        }
+
+        // construct Table body
+        function ConstructTableBody(comp) {
+            var tblRow = "<tr>" +
+                "<td>" + comp.id + "</td>" +
+                "<td><input   class='company form-control' type='text' value='" + comp.company + "'/></td>" +
+                "<td><input  class='desc form-control'  type='text' value='" + comp.description + "'/></td>" +
+                "<td><input  class='price form-control' type='number' value='" + comp.price + "'/></td>" +
+                "<td>" +
+                "<button type='button' " +
+                "onclick='ComputerUpdate(this);' " +
+                "class='btn btn-warning' " +
+                "data-id='" + comp.id + "' " +
+                "data-company='" + comp.company + "' " +
+                "data-desc='" + comp.description + "' " +
+                "data-price='" + comp.price + "' " +
+                ">" +
+                "Change" +
+                "</button> " +
+                " <button type='button' " +
+                "onclick='ComputerDelete(this);'" +
+                "class='btn btn-danger' " +
+                "data-id='" + comp.id + "'>" +
+                "Del" +
+                "</button>" +
+                "</td>" +
+                "</tr>";
+
+            return tblRow;
+        }
+        // to  add new computer
+        function AddComputer(item) {
+            var o = {};
+            o.url = "/api/Computers";
+            o.type = "POST";
+            var c = Computer;
+            c.company = $("#company").val();
+            c.description = $("#desc").val();
+            c.price = $('#price').val();
+            o.contentType = "application/json";
+            o.dataType = "html";
+            o.data = JSON.stringify(c);
+            o.success = function (msg) {
+                ComputerList();
+                $("#msg").html(msg);
+            },
+                o.error = function () {
+                    $("#msg").html("WebApiError");
+                };
+            $.ajax(o);
+        }
+
+        // to update computer data
+        function ComputerUpdate(item) {
+            var id = $(item).data("id");
+            var o = {};
+            o.url = "/api/Computers/" + id
+            o.type = "PUT";
+
+            var c = Computer;
+            c.id = $(item).data("id");
+            c.company = $(".company", $(item).parent().parent()).val();
+            c.description = $(".desc", $(item).parent().parent()).val();
+            c.price = $(".price", $(item).parent().parent()).val();
+            o.contentType = "application/json";
+            o.dataType = "html";
+            o.data = JSON.stringify(c);
+            o.success = function (msg) {
+                $("#msg").html(msg);
+            };
+            o.error = function () {
+                $("#msg").html("WebAPIError!");
+            };
+            $.ajax(o);
+        }
+
+        // to delete computer data
+        function ComputerDelete(item) {
+            var id = $(item).data("id");
+            var o = {};
+            o.url = "/api/Computers/"
+                + id;
+            o.type = "DELETE";
+            o.dataType = "html";
+            o.success = function (msg) {
+                console.log('msg= ' + msg);
+                $("#msg").html(msg);
+                ComputerList();
+            };
+            o.error = function () {
+                $("#msg").html("Web API Error");
+            };
+            $.ajax(o);
+        }
+
+
+
+
+        //fetch all the computers data from API
+        function ComputerList() {
+            // Calling API AJX 
+            $.ajax({
+                url: '/api/Computers/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (Comps) {
+                    ComputerListSuccess(Comps);
+                },
+                error: function (request, message, error) {
+                    InCaseOfError(request, message, error);
+                }
+            });
+        }
+        // When error occurs this functon acts
+        function InCaseOfError(request, message, error) {
+            var msg = "";
+            msg += "Code: " + request.status + "\n";
+            msg += "Text: " + request.statusText + "\n";
+            if (request.responseJSON != null) {
+                msg += "Message" + request.responseJSON.Message + "\n";
+            }
+
+            alert(msg);
+        }
+
+
+    </script>
+
+</body>
+</html> 
